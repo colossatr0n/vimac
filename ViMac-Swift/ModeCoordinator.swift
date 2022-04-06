@@ -24,6 +24,7 @@ class ModeCoordinator: ModeControllerDelegate {
     let scrollModeKeySequence: [Character] = ["j", "k"]
     let hintModeKeySequence: [Character] = ["f", "d"]
     private let keySequenceListener: VimacKeySequenceListener
+    private var holdKeyListener: HoldKeyListener?
     
     var modeController: ModeController?
     
@@ -40,13 +41,32 @@ class ModeCoordinator: ModeControllerDelegate {
         disposeBag.insert(keySequenceListener.hintMode.bind(onNext: { [weak self] _ in
             self?.setHintMode(mechanism: "Key Sequence")
         }))
+        
+        UserDefaultsProperties.holdSpaceHintModeActivationEnabled.readLive()
+            .bind(onNext: { [weak self] enabled in
+                guard let self = self else { return }
+
+                self.log("Hold Space to activate hint-mode enabled: \(enabled)")
+                
+                if let holdKeyListener = self.holdKeyListener {
+                    holdKeyListener.stop()
+                    self.holdKeyListener = nil
+                }
+
+                if enabled {
+                    self.holdKeyListener = HoldKeyListener()
+                    self.holdKeyListener?.delegate = self
+                    self.holdKeyListener?.start()
+                }
+            })
+            .disposed(by: disposeBag)
     }
     
     func deactivate() {
         self.modeController?.deactivate()
     }
     
-    func beforeModeActivation() {
+    func beforeModeActivation() {        
         self.priorKBLayout = InputSourceManager.currentInputSource()
         if let forceKBLayout = self.forceKBLayout {
             forceKBLayout.select()
@@ -152,6 +172,9 @@ class ModeCoordinator: ModeControllerDelegate {
         let axAppOptional = Application.init(app)
         guard let axApp = axAppOptional else { return nil }
         
+        // HACK: Chromium activates its accessibility feature when accessibilityRole is accessed
+        let _: Any? = try? axApp.attribute( .role)
+        
         let axWindowOptional: UIElement? = try? axApp.attribute(.focusedWindow)
         guard let axWindow = axWindowOptional else { return nil }
         
@@ -162,20 +185,37 @@ class ModeCoordinator: ModeControllerDelegate {
         Analytics.shared().track("PMF Survey Alert Shown")
         
         let alert = NSAlert()
-        alert.messageText = "Help us improve Vimac!"
-        alert.informativeText = "Mind sharing your experience using Vimac? This would really help us improve Vimac."
+        alert.messageText = "Congrats on hitting 350 activations! 🚀"
+        alert.informativeText = "Mind sharing your experience using Vimac? Your feedback is valuable and will help us make Vimac even better."
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "Yes")
+        alert.addButton(withTitle: "Yes!")
         alert.addButton(withTitle: "No")
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
             Analytics.shared().track("Opening PMF Survey")
 
-            let url = URL(string: "https://vimacapp.com/pmf-survey")!
+            let url = URL(string: "https://vimacapp.com/pmf-survey?anon-id=\(Analytics.shared().getAnonymousId())")!
             _ = NSWorkspace.shared.open(url)
         } else {
             Analytics.shared().track("PMF Survey Alert Dismissed")
         }
+    }
+    
+    func log(_ str: String) {
+        os_log("%@", str)
+    }
+}
+
+extension ModeCoordinator: HoldKeyListenerDelegate {
+    func onKeyHeld(key: String) {
+        if let modeController = self.modeController {
+            if let _  = modeController as? HintModeController {
+                self.deactivate()
+                return
+            }
+        }
+
+        self.setHintMode(mechanism: "Hold Space")
     }
 }
 

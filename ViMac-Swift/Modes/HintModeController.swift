@@ -174,6 +174,7 @@ class HintModeUserInterface {
 class HintModeController: ModeController {
     weak var delegate: ModeControllerDelegate?
     private var activated = false
+    private var continuous = false
     
     private let startTime = CFAbsoluteTimeGetCurrent()
     private let disposeBag = DisposeBag()
@@ -187,9 +188,10 @@ class HintModeController: ModeController {
     let app: NSRunningApplication?
     let window: Element?
     
-    init(app: NSRunningApplication?, window: Element?) {
+    init(app: NSRunningApplication?, window: Element?, continuous: Bool) {
         self.app = app
         self.window = window
+        self.continuous = continuous
     }
 
     func activate() {
@@ -279,13 +281,26 @@ class HintModeController: ModeController {
             let matchingHint = hintsWithInputAsPrefix.first(where: { $0.text == newInput.uppercased() })
 
             if let matchingHint = matchingHint {
-                Analytics.shared().track("Hint Mode Action Performed", properties: [
+                let analyticsMsg = (self.continuous ? "Continuous " : "") + "Hint Mode Action Performed"
+                Analytics.shared().track(analyticsMsg, properties: [
                     "Target Application": app?.bundleIdentifier as Any,
                     "Hint Action": action.rawValue
                 ])
                 
-                self.deactivate()
+                if !self.continuous {
+                    self.deactivate()
+                }
                 performHintAction(matchingHint, action: action)
+                
+                if self.continuous {
+                    // Removes hints overlay
+                    self.ui!.contentViewController.view.removeFromSuperview()
+                    // Reset hint overlay and set previous hints.
+                    self.input = ""
+                    self.ui = HintModeUserInterface(window: window)
+                    self.ui!.show()
+                    self.ui!.setHints(hints: hints)
+                }
                 return
             }
 

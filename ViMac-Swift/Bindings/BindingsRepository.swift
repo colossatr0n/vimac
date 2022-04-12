@@ -15,6 +15,8 @@ class BindingsRepository {
             holdSpaceHintModeActivationEnabled: UserDefaultsProperties.holdSpaceHintModeActivationEnabled.read(),
             hintModeKeySequenceEnabled: UserDefaultsProperties.keySequenceHintModeEnabled.read(),
             hintModeKeySequence: UserDefaultsProperties.keySequenceHintMode.read(),
+            continuousHintModeKeySequenceEnabled: UserDefaultsProperties.keySequenceContinuousHintModeEnabled.read(),
+            continuousHintModeKeySequence: UserDefaultsProperties.keySequenceContinuousHintMode.read(),
             scrollModeKeySequenceEnabled: UserDefaultsProperties.keySequenceScrollModeEnabled.read(),
             scrollModeKeySequence: UserDefaultsProperties.keySequenceScrollMode.read(),
             resetDelay: Double(UserDefaultsProperties.keySequenceResetDelay.read()) ?? Double(UserDefaultsProperties.keySequenceResetDelay.defaultValue)!
@@ -26,6 +28,8 @@ class BindingsRepository {
             UserDefaultsProperties.holdSpaceHintModeActivationEnabled.readLive(),
             UserDefaultsProperties.keySequenceHintModeEnabled.readLive(),
             UserDefaultsProperties.keySequenceHintMode.readLive(),
+            UserDefaultsProperties.keySequenceContinuousHintModeEnabled.readLive(),
+            UserDefaultsProperties.keySequenceContinuousHintMode.readLive(),
             UserDefaultsProperties.keySequenceScrollModeEnabled.readLive(),
             UserDefaultsProperties.keySequenceScrollMode.readLive(),
             UserDefaultsProperties.keySequenceResetDelay.readLive()

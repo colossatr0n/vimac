@@ -23,6 +23,7 @@ class ModeCoordinator: ModeControllerDelegate {
     
     let scrollModeKeySequence: [Character] = ["j", "k"]
     let hintModeKeySequence: [Character] = ["f", "d"]
+    let continuousHintModeKeySequence: [Character] = ["f", "d", "s"]
     private let keySequenceListener: VimacKeySequenceListener
     private var holdKeyListener: HoldKeyListener?
     
@@ -40,6 +41,10 @@ class ModeCoordinator: ModeControllerDelegate {
         
         disposeBag.insert(keySequenceListener.hintMode.bind(onNext: { [weak self] _ in
             self?.setHintMode(mechanism: "Key Sequence")
+        }))
+        
+        disposeBag.insert(keySequenceListener.continuousHintMode.bind(onNext: { [weak self] _ in
+            self?.setHintMode(mechanism: "Key Sequence", continuous: true)
         }))
         
         UserDefaultsProperties.holdSpaceHintModeActivationEnabled.readLive()
@@ -124,7 +129,7 @@ class ModeCoordinator: ModeControllerDelegate {
         modeController!.activate()
     }
     
-    func setHintMode(mechanism: String) {
+    func setHintMode(mechanism: String, continuous: Bool = false) {
         if let modeController = modeController {
             modeController.deactivate()
         }
@@ -150,11 +155,11 @@ class ModeCoordinator: ModeControllerDelegate {
         let activationCount = UserDefaults.standard.integer(forKey: "hintModeActivationCount")
         UserDefaults.standard.set(activationCount + 1, forKey: "hintModeActivationCount")
         
-        modeController = HintModeController(app: app, window: window)
+        modeController = HintModeController(app: app, window: window, continuous: continuous)
         modeController?.delegate = self
         modeController!.activate()
     }
-    
+        
     func observeForceKBInputSource() -> NSKeyValueObservation {
         let observation = UserDefaults.standard.observe(\.ForceKeyboardLayout, options: [.initial, .new], changeHandler: { [weak self] (a, b) in
             let id = b.newValue

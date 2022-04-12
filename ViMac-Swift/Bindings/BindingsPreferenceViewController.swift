@@ -16,11 +16,14 @@ class BindingsPreferenceViewController: NSViewController, PreferencePane, NSText
     
     private var grid: NSGridView!
     private var hintModeShortcut: MASShortcutView!
+    private var continuousHintModeShortcut: MASShortcutView!
     private var scrollModeShortcut: MASShortcutView!
 
     private var holdSpaceToActivateHintModeCheckbox: NSButton!
     private var hintModeKeySequenceEnabledCheckbox: NSButton!
     private var hintModeKeySequenceTextField: NSTextField!
+    private var continuousHintModeKeySequenceEnabledCheckbox: NSButton!
+    private var continuousHintModeKeySequenceTextField: NSTextField!
     private var scrollModeKeySequenceEnabledCheckbox: NSButton!
     private var scrollModeKeySequenceTextField: NSTextField!
     private var resetDelayTextField: NSTextField!
@@ -80,6 +83,11 @@ class BindingsPreferenceViewController: NSViewController, PreferencePane, NSText
         hintModeShortcut.associatedUserDefaultsKey = KeyboardShortcuts.shared.hintModeShortcutKey
         grid.addRow(with: [hintModeShortcutLabel, hintModeShortcut])
         
+        let continuousHintModeShortcutLabel = NSTextField(labelWithString: "Continuous Hint Mode Shortcut:")
+        continuousHintModeShortcut = MASShortcutView()
+        continuousHintModeShortcut.associatedUserDefaultsKey = KeyboardShortcuts.shared.continuousHintModeShortcutKey
+        grid.addRow(with: [continuousHintModeShortcutLabel, continuousHintModeShortcut])
+        
         let scrollModeShortcutLabel = NSTextField(labelWithString: "Scroll Mode Shortcut:")
         scrollModeShortcut = MASShortcutView()
         scrollModeShortcut.associatedUserDefaultsKey = KeyboardShortcuts.shared.scrollModeShortcutKey
@@ -109,6 +117,15 @@ class BindingsPreferenceViewController: NSViewController, PreferencePane, NSText
         hintModeKeySequenceTextField.placeholderString = "fd"
         hintModeKeySequenceTextField.delegate = self
         grid.addRow(with: [NSGridCell.emptyContentView, hintModeKeySequenceTextField])
+        
+        let continuousHintModeKeySequenceLabel = NSTextField(labelWithString: "Continuous Hint Mode Key Sequence:")
+        continuousHintModeKeySequenceEnabledCheckbox = NSButton(checkboxWithTitle: "Enabled", target: self, action: #selector(onContinuousHintModeKeySequenceCheckboxClick))
+        grid.addRow(with: [continuousHintModeKeySequenceLabel, continuousHintModeKeySequenceEnabledCheckbox])
+        
+        continuousHintModeKeySequenceTextField = NSTextField()
+        continuousHintModeKeySequenceTextField.placeholderString = "fds"
+        continuousHintModeKeySequenceTextField.delegate = self
+        grid.addRow(with: [NSGridCell.emptyContentView, continuousHintModeKeySequenceTextField])
         
         let scrollModeKeySequenceLabel = NSTextField(labelWithString: "Scroll Mode Key Sequence:")
         scrollModeKeySequenceEnabledCheckbox = NSButton(checkboxWithTitle: "Enabled", target: self, action: #selector(onScrollModeKeySequenceCheckboxClick))
@@ -143,6 +160,11 @@ class BindingsPreferenceViewController: NSViewController, PreferencePane, NSText
         hintModeKeySequenceEnabledCheckbox.state = hintModeKeySequenceEnabled ? .on : .off
         hintModeKeySequenceTextField.stringValue = UserDefaultsProperties.keySequenceHintMode.read()
         hintModeKeySequenceTextField.isEnabled = hintModeKeySequenceEnabled
+        
+        let continuousHintModeKeySequenceEnabled = UserDefaultsProperties.keySequenceContinuousHintModeEnabled.read()
+        continuousHintModeKeySequenceEnabledCheckbox.state = continuousHintModeKeySequenceEnabled ? .on : .off
+        continuousHintModeKeySequenceTextField.stringValue = UserDefaultsProperties.keySequenceContinuousHintMode.read()
+        continuousHintModeKeySequenceTextField.isEnabled = continuousHintModeKeySequenceEnabled
 
         let scrollModeKeySequenceEnabled = UserDefaultsProperties.keySequenceScrollModeEnabled.read()
         scrollModeKeySequenceEnabledCheckbox.state = scrollModeKeySequenceEnabled ? .on : .off
@@ -164,6 +186,13 @@ class BindingsPreferenceViewController: NSViewController, PreferencePane, NSText
         UserDefaultsProperties.keySequenceHintModeEnabled.write(enabled)
     }
     
+    @objc private func onContinuousHintModeKeySequenceCheckboxClick() {
+        let enabled = continuousHintModeKeySequenceEnabledCheckbox.state == .on
+        continuousHintModeKeySequenceTextField.isEnabled = enabled
+        
+        UserDefaultsProperties.keySequenceContinuousHintModeEnabled.write(enabled)
+    }
+    
     @objc private func onScrollModeKeySequenceCheckboxClick() {
         let enabled = scrollModeKeySequenceEnabledCheckbox.state == .on
         scrollModeKeySequenceTextField.isEnabled = enabled
@@ -174,6 +203,11 @@ class BindingsPreferenceViewController: NSViewController, PreferencePane, NSText
     private func onHintModeKeySequenceTextFieldChange() {
         let value = hintModeKeySequenceTextField.stringValue
         UserDefaultsProperties.keySequenceHintMode.write(value)
+    }
+    
+    private func onContinuousHintModeKeySequenceTextFieldChange() {
+        let value = continuousHintModeKeySequenceTextField.stringValue
+        UserDefaultsProperties.keySequenceContinuousHintMode.write(value)
     }
     
     private func onScrollModeKeySequenceTextFieldChange() {
@@ -201,6 +235,11 @@ class BindingsPreferenceViewController: NSViewController, PreferencePane, NSText
         
         if textField == hintModeKeySequenceTextField {
             onHintModeKeySequenceTextFieldChange()
+            return
+        }
+        
+        if textField == continuousHintModeKeySequenceTextField {
+            onContinuousHintModeKeySequenceTextFieldChange()
             return
         }
 

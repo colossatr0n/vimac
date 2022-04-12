@@ -12,6 +12,8 @@ struct BindingsConfig {
     let holdSpaceHintModeActivationEnabled: Bool
     let hintModeKeySequenceEnabled: Bool
     let hintModeKeySequence: String
+    let continuousHintModeKeySequenceEnabled: Bool
+    let continuousHintModeKeySequence: String
     let scrollModeKeySequenceEnabled: Bool
     let scrollModeKeySequence: String
     let resetDelay: TimeInterval

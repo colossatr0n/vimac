@@ -24,6 +24,9 @@ class VimacKeySequenceListener {
     private let hintModeRelay: PublishRelay<Void> = .init()
     lazy var hintMode = hintModeRelay.asObservable()
     
+    private let continuousHintModeRelay: PublishRelay<Void> = .init()
+    lazy var continuousHintMode = continuousHintModeRelay.asObservable()
+    
     private let scrollModeRelay: PublishRelay<Void> = .init()
     lazy var scrollMode = scrollModeRelay.asObservable()
     
@@ -48,6 +51,10 @@ class VimacKeySequenceListener {
         hintModeRelay.accept(())
     }
     
+    private func onContinuousHintModeSequenceTyped() {
+        continuousHintModeRelay.accept(())
+    }
+    
     private func onScrollModeSequenceTyped() {
         scrollModeRelay.accept(())
     }
@@ -63,7 +70,7 @@ class VimacKeySequenceListener {
             return
         }
         
-        if !config.hintModeKeySequenceEnabled && !config.scrollModeKeySequenceEnabled {
+        if !config.hintModeKeySequenceEnabled && !config.continuousHintModeKeySequenceEnabled && !config.scrollModeKeySequenceEnabled {
             return
         }
 
@@ -75,6 +82,8 @@ class VimacKeySequenceListener {
             
             if String(sequence) == config.hintModeKeySequence {
                 self.onHintModeSequenceTyped()
+            } else if String(sequence) == config.continuousHintModeKeySequence {
+                self.onContinuousHintModeSequenceTyped()
             } else if String(sequence) == config.scrollModeKeySequence {
                 self.onScrollModeSequenceTyped()
             }
@@ -96,8 +105,15 @@ class VimacKeySequenceListener {
     
     func createKeySequenceListener(config: BindingsConfig) -> KeySequenceListener? {
         var sequences: [[Character]] = []
-        if config.hintModeKeySequenceEnabled && config.hintModeKeySequence.count > 1 {
-            sequences.append(Array(config.hintModeKeySequence))
+        if config.hintModeKeySequenceEnabled {
+            if config.hintModeKeySequence.count > 1 {
+                sequences.append(Array(config.hintModeKeySequence))
+            }
+        }
+        if config.continuousHintModeKeySequenceEnabled {
+            if config.continuousHintModeKeySequence.count > 1 {
+                sequences.append(Array(config.continuousHintModeKeySequence))
+            }
         }
         if config.scrollModeKeySequenceEnabled && config.scrollModeKeySequence.count > 1 {
             sequences.append(Array(config.scrollModeKeySequence))

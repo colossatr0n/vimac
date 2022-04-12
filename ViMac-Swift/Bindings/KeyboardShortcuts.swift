@@ -13,8 +13,10 @@ class KeyboardShortcuts {
     static let shared = KeyboardShortcuts.init()
     
     let hintModeShortcutKey = "HintModeShortcut"
+    let continuousHintModeShortcutKey = "ContinuousHintModeShortcut"
     let scrollModeShortcutKey = "ScrollModeShortcut"
     let defaultHintShortcut = MASShortcut.init(keyCode: kVK_ANSI_F, modifierFlags: [.control])
+    let defaultContinuousHintShortcut = MASShortcut.init(keyCode: kVK_ANSI_Slash, modifierFlags: [.control])
     let defaultScrollShortcut = MASShortcut.init(keyCode: kVK_ANSI_J, modifierFlags: [.control])
     
     func registerDefaults() {
@@ -22,6 +24,12 @@ class KeyboardShortcuts {
         hintModeTempView.associatedUserDefaultsKey = self.hintModeShortcutKey
         if hintModeTempView.shortcutValue == nil {
             hintModeTempView.shortcutValue = self.defaultHintShortcut
+        }
+        
+        let continuousHintModeTempView = MASShortcutView.init()
+        continuousHintModeTempView.associatedUserDefaultsKey = self.continuousHintModeShortcutKey
+        if continuousHintModeTempView.shortcutValue == nil {
+            continuousHintModeTempView.shortcutValue = self.defaultContinuousHintShortcut
         }
         
         let scrollModeTempView = MASShortcutView.init()
@@ -35,6 +43,16 @@ class KeyboardShortcuts {
         Observable.create { observer in
             MASShortcutBinder.shared()
                 .bindShortcut(withDefaultsKey: self.hintModeShortcutKey, toAction: {
+                    observer.onNext(Void())
+                })
+            return Disposables.create()
+        }
+    }
+    
+    func continuousHintModeShortcutActivation() -> Observable<Void> {
+        Observable.create { observer in
+            MASShortcutBinder.shared()
+                .bindShortcut(withDefaultsKey: self.continuousHintModeShortcutKey, toAction: {
                     observer.onNext(Void())
                 })
             return Disposables.create()

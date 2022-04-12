@@ -23,6 +23,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var windowObservable: Observable<Element?> = createFocusedWindowObservable()
 
     let hintModeShortcutObservable: Observable<Void> = KeyboardShortcuts.shared.hintModeShortcutActivation()
+    let continuousHintModeShortcutObservable: Observable<Void> = KeyboardShortcuts.shared.continuousHintModeShortcutActivation()
     let scrollModeShortcutObservable: Observable<Void> = KeyboardShortcuts.shared.scrollModeShortcutActivation()
     
     var compositeDisposable: CompositeDisposable
@@ -254,6 +255,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             })
         )
         
+        _ = self.compositeDisposable.insert(continuousHintModeShortcutObservable
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak self] _ in
+                guard let self = self else { return }
+
+                if let modeController = self.modeCoordinator.modeController {
+                    if let _  = modeController as? HintModeController {
+                        self.modeCoordinator.deactivate()
+                        return
+                    }
+                }
+                
+                self.modeCoordinator.setHintMode(mechanism: "Shortcut", continuous: true)
+            })
+        )
+        
         _ = self.compositeDisposable.insert(scrollModeShortcutObservable
             .observeOn(MainScheduler.instance)
             .subscribe(onNext: { [weak self] _ in
@@ -299,8 +316,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             "Launch At Login": UserDefaults.standard.bool(forKey: Utils.shouldLaunchOnStartupKey),
             "Force KB Layout ID": UserDefaults.standard.string(forKey: Utils.forceKeyboardLayoutKey),
             "Hint Mode Key Sequence Enabled": UserDefaultsProperties.keySequenceHintModeEnabled.read(),
+            "Continuous Hint Mode Key Sequence Enabled": UserDefaultsProperties.keySequenceContinuousHintModeEnabled.read(),
             "Scroll Mode Key Sequence Enabled": UserDefaultsProperties.keySequenceScrollModeEnabled.read(),
             "Hint Mode Key Sequence": UserDefaultsProperties.keySequenceHintMode.read(),
+            "Continuous Hint Mode Key Sequence": UserDefaultsProperties.keySequenceContinuousHintMode.read(),
             "Scroll Mode Key Sequence": UserDefaultsProperties.keySequenceScrollMode.read(),
             "Non Native Support Enabled": UserDefaultsProperties.AXEnhancedUserInterfaceEnabled.read(),
             "Electron Support Enabled": UserDefaultsProperties.AXManualAccessibilityEnabled.read()
